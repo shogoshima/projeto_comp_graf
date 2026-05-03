@@ -153,7 +153,7 @@ def main() -> int:
                 scene.boat.position[0] = cx + dx * (max_r / r)
                 scene.boat.position[2] = cz + dz * (max_r / r)
             # vira a "proa" pra direção do movimento
-            scene.boat.rotation[1] = math.atan2(-bdx, -bdz)
+            scene.boat.rotation[1] = math.atan2(bdx, bdz)
 
         # POLVO (rotação) — R / T
         srot = (glfw.get_key(win, glfw.KEY_T) == glfw.PRESS) - (glfw.get_key(win, glfw.KEY_R) == glfw.PRESS)
