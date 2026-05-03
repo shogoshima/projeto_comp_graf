@@ -53,8 +53,8 @@ SKY_HEIGHT = 60.0
 # encaixa o disco de madeira na largura X (Z é coberto pelas paredes da cabana).
 HUT_FOOTPRINT_RADIUS = 3.5
 
-# Lago — círculo de água deslocado em +X p/ não conflitar com a cabana
-LAKE_CENTER = (28.0, 0.0)   # (x, z)
+HUT_CENTER  = (-14.0, 0.0)  # (x, z) — cabana centrada à esquerda do mundo
+LAKE_CENTER = ( 14.0, 0.0)  # (x, z) — lago centrado à direita do mundo
 LAKE_RADIUS = 18.0
 WATER_Y = 0.05               # ligeiramente acima do solo p/ evitar z-fighting
 
@@ -73,80 +73,70 @@ class Scene:
         ])
 
         # ---------------- Pisos ----------------
-        # Chão externo (grama com buraco circular para a cabana)
+        # Chão externo
         self.outdoor_floor = GrassFloorWithHole(
             world_half=WORLD_HALF,
             hole_radius=HUT_FOOTPRINT_RADIUS,
-            hole_center=(0.0, 0.0),
+            hole_center=HUT_CENTER,
             segments=64,
             uv_scale=24.0,
         )
 
-        # Chão interno (madeira) — disco que preenche o buraco
+        # Chão interno (madeira)
         self.indoor_floor = WoodFloorDisk(
             radius=HUT_FOOTPRINT_RADIUS - 0.05,  # leve recuo p/ caber dentro da parede
             segments=64,
             uv_scale=3.5,
         )
-        self.indoor_floor.position = np.array([0.0, 0.05, 0.0], dtype=np.float32)
+        self.indoor_floor.position = np.array([HUT_CENTER[0], 0.2, HUT_CENTER[1]], dtype=np.float32)
 
-        # Lago (disco de água)
+        # Lago
         self.lake = WaterDisk(radius=LAKE_RADIUS, segments=96, uv_scale=2.5)
         self.lake.position = np.array([LAKE_CENTER[0], WATER_Y, LAKE_CENTER[1]],
                                       dtype=np.float32)
 
-        # ---------------- Cabana (delimitador, NÃO conta nos 6) ----------------
-        # Cabana raw é gigante (~13x13x22): centro em (-5.6, 6.4, -0.2) e ~13m
-        # de altura. Escalamos p/ ~5.9m de altura e DESLOCAMOS em +X p/ que o
-        # centro do modelo caia na origem (assim o buraco circular do piso casa).
-        # culling desligado pra ver paredes por dentro.
-        HUT_SCALE = 0.45
+        # Cabana
+        HUT_SCALE = 0.8
         self.hut = Entity(
             Mesh.from_obj(str(ASSETS / "hut" / "hut.obj")),
-            position=(5.6 * HUT_SCALE, 0.0, 0.19 * HUT_SCALE),
+            position=(HUT_CENTER[0] + 5.6 * HUT_SCALE, 0.0, HUT_CENTER[1] + 0.19 * HUT_SCALE),
             scale=(HUT_SCALE, HUT_SCALE, HUT_SCALE),
             disable_culling=True,
         )
 
         # ---------------- Modelos EXTERNOS ----------------
-        # Barco — flutuando na superfície do lago. Translação por teclado.
-        # Modelo veio em escala enorme (DAZ Studio em centímetros), rescalando p/
-        # caber no lago. Posição em (lake_x, water_level, lake_z).
+        # Barco flutuando na superfície do lago. Translação por teclado.
+        BOAT_SCALE = 0.012 
         self.boat = Entity(
             Mesh.from_obj(str(ASSETS / "boat" / "boat.obj")),
-            position=(LAKE_CENTER[0] - 4.0, WATER_Y + 0.1, LAKE_CENTER[1]),
+            position=(LAKE_CENTER[0] - 10.0, WATER_Y + 0.1, LAKE_CENTER[1]),
             rotation=(0.0, math.radians(-90), 0.0),
-            scale=(0.012, 0.012, 0.012),  # asset gigante (DAZ) → ~3m
+            scale=(BOAT_SCALE, BOAT_SCALE, BOAT_SCALE),  # asset gigante (DAZ) → ~3m
         )
 
-        # Polvo — ao redor do lago, em pé (ligeiramente submerso). Rotação por teclado.
+        # Polvo ao redor do lago, em pé (ligeiramente submerso). Rotação por teclado.
+        OCTOPUS_SCALE = 8
         self.octopus = Entity(
             Mesh.from_obj(str(ASSETS / "octopus" / "octopus.obj")),
             position=(LAKE_CENTER[0] + 8.0, WATER_Y + 0.05, LAKE_CENTER[1] - 2.0),
             rotation=(0.0, 0.0, 0.0),
-            scale=(8.0, 8.0, 8.0),
+            scale=(OCTOPUS_SCALE, OCTOPUS_SCALE, OCTOPUS_SCALE),
         )
 
-        # Cavalo-marinho — perto da margem, escala por teclado.
-        # Modelo é "alto" no eixo Y (~9 unidades), então floor_y é ajustado por position.
+        # Cavalo-marinho perto da margem, escala por teclado.
+        SEAHORSE_SCALE = 0.4
         self.seahorse = Entity(
             Mesh.from_obj(str(ASSETS / "seahorse" / "seahorse.obj")),
             position=(LAKE_CENTER[0] - 12.0, WATER_Y, LAKE_CENTER[1] + 4.0),
             rotation=(0.0, math.radians(45), 0.0),
-            scale=(0.4, 0.4, 0.4),
+            scale=(SEAHORSE_SCALE, SEAHORSE_SCALE, SEAHORSE_SCALE),
         )
 
-        # Árvores — gerar instâncias espalhadas.
-        self.tree_mesh = Mesh.from_obj(str(ASSETS / "tree" / "tree.obj"))
-
         rng = np.random.default_rng(seed=2024)
-        self.trees: List[Entity] = []
-        n_trees_each = 300
         forbidden = [
-            (0.0, 0.0, HUT_FOOTPRINT_RADIUS + 4.0),
+            (HUT_CENTER[0],  HUT_CENTER[1],  HUT_FOOTPRINT_RADIUS + 8.0),
             (LAKE_CENTER[0], LAKE_CENTER[1], LAKE_RADIUS + 4.0),
         ]
-        TREE_Y_OFFSET = -1.17
 
         def far_enough(x: float, z: float) -> bool:
             for fx, fz, fr in forbidden:
@@ -154,59 +144,92 @@ class Scene:
                     return False
             return True
 
-        def random_tree_pos() -> tuple[float, float]:
-            for _ in range(50):
+        def random_outdoor_pos() -> tuple[float, float] | None:
+            for _ in range(100):
                 x = float(rng.uniform(-WORLD_HALF + 5, WORLD_HALF - 5))
                 z = float(rng.uniform(-WORLD_HALF + 5, WORLD_HALF - 5))
                 if far_enough(x, z):
                     return x, z
-            return 0.0, 0.0
+            return None
 
-        for _ in range(n_trees_each):
-            x, z = random_tree_pos()
-            scale = float(rng.uniform(4.0, 5.0))
+        spruce_meshes = [
+            Mesh.from_obj(str(ASSETS / "tree_spruce_small_01" / "tree_spruce_small_01.obj")),
+            Mesh.from_obj(str(ASSETS / "tree_spruce_tiny_01"  / "tree_spruce_tiny_01.obj")),
+        ]
+        bush_set_meshes = [
+            Mesh.from_obj(str(ASSETS / "bush_average"       / "bush_average.obj")),
+            Mesh.from_obj(str(ASSETS / "bush_group_average" / "bush_group_average.obj")),
+        ]
+        stone_meshes = [
+            Mesh.from_obj(str(ASSETS / "stone_average_01"    / "stone_average_01.obj")),
+            Mesh.from_obj(str(ASSETS / "stone_group_average" / "stone_group_average.obj")),
+        ]
+
+        self.outdoor_props: List[Entity] = []
+
+        for i in range(300):
+            pos = random_outdoor_pos()
+            if pos is None:
+                continue
+            x, z = pos
+            scale = float(rng.uniform(0.8, 1.0))
             yaw = float(rng.uniform(0, math.tau))
-            self.trees.append(Entity(
-                self.tree_mesh,
-                position=(x, TREE_Y_OFFSET * scale, z),
-                rotation=(0.0, yaw, 0.0),
-                scale=(scale, scale, scale),
-            ))
+            self.outdoor_props.append(Entity(spruce_meshes[i % 2], position=(x, 0.0, z),
+                                      rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
+
+        for i in range(200):
+            pos = random_outdoor_pos()
+            if pos is None:
+                continue
+            x, z = pos
+            scale = float(rng.uniform(0.8, 1.0))
+            yaw = float(rng.uniform(0, math.tau))
+            self.outdoor_props.append(Entity(bush_set_meshes[i % 2], position=(x, 0.0, z),
+                                      rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
+
+        for i in range(100):
+            pos = random_outdoor_pos()
+            if pos is None:
+                continue
+            x, z = pos
+            scale = float(rng.uniform(1.0, 2.0))
+            yaw = float(rng.uniform(0, math.tau))
+            self.outdoor_props.append(Entity(stone_meshes[i % 2], position=(x, 0.0, z),
+                                      rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
 
         # ---------------- Modelos INTERNOS ----------------
-        # Vara de pesca — encostada na parede da cabana.
-        # Raw é ~1.5m de comprimento: scale 1.0 já dá um cabo realista.
-        # Bottom raw ≈ y=-0.37; lift p/ apoiar no piso (y=0.05).
+        # Vara de pesca encostada na parede da cabana.
+        FISHING_ROD_SCALE = 2
         self.fishingrod = Entity(
             Mesh.from_obj(str(ASSETS / "fishingrod" / "fishingrod.obj")),
-            position=(-2.0, 0.45, -1.0),
+            position=(HUT_CENTER[0] -2.0, 0.45, HUT_CENTER[1] -1.0),
             rotation=(math.radians(-10), math.radians(30), math.radians(70)),
-            scale=(1.0, 1.0, 1.0),
+            scale=(FISHING_ROD_SCALE, FISHING_ROD_SCALE, FISHING_ROD_SCALE),
         )
 
-        # Balde — apoiado no chão de madeira, perto da parede oposta à vara.
-        # Raw ~0.33x0.49x0.28 (m), base em y=0.
+        # Balde apoiado no chão de madeira, perto da parede oposta à vara.
+        BUCKET_SCALE = 2
         self.bucket = Entity(
             Mesh.from_obj(str(ASSETS / "bucket" / "bucket.obj")),
-            position=(1.8, 0.05, -1.2),
+            position=(HUT_CENTER[0] +1.8, 0.21, HUT_CENTER[1] -1.2),
             rotation=(0.0, math.radians(20), 0.0),
-            scale=(1.4, 1.4, 1.4),  # ~70cm de altura
+            scale=(BUCKET_SCALE, BUCKET_SCALE, BUCKET_SCALE),
         )
 
-        # Lanterna — deitada no chão. Raw enorme (~33x8 no eixo X), scale 0.008
-        # produz comprimento ~26cm. Eixo longo no X → rotação Y orienta natural.
+        # Lanterna deitada no chão
+        FLASHLIGHT_SCALE = 0.02
         self.flashlight = Entity(
             Mesh.from_obj(str(ASSETS / "flashlight" / "flashlight.obj")),
-            position=(-0.5, 0.10, 2.0),  # y elevado p/ apoiar no piso (raio ~3cm)
+            position=(HUT_CENTER[0] -0.5, 0.3, HUT_CENTER[1] +2.0),  # y elevado p/ apoiar no piso (raio ~3cm)
             rotation=(0.0, math.radians(35), 0.0),
-            scale=(0.01, 0.01, 0.01),
+            scale=(FLASHLIGHT_SCALE, FLASHLIGHT_SCALE, FLASHLIGHT_SCALE),
         )
 
         self.indoor_extras: List[Entity] = [self.bucket, self.flashlight]
 
         # ---------------- Listas para draw ----------------
         self.outdoor_entities: List[Entity] = [
-            self.boat, self.octopus, self.seahorse, *self.trees,
+            self.boat, self.octopus, self.seahorse, *self.outdoor_props,
         ]
         self.indoor_entities: List[Entity] = [
             self.fishingrod, *self.indoor_extras,
