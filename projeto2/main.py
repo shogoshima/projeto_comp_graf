@@ -43,7 +43,7 @@ from src.shader import Shader
 ROOT = Path(__file__).resolve().parent
 SHADERS = ROOT / "shaders"
 
-WIDTH, HEIGHT = 1280, 800
+WIDTH, HEIGHT = 700, 700
 TITLE = "Pescaria de Luxo - Computação Gráfica P2"
 
 
