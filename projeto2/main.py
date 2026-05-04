@@ -154,6 +154,15 @@ def main() -> int:
                 scene.boat.position[2] = cz + dz * (max_r / r)
             # vira a "proa" pra direção do movimento
             scene.boat.rotation[1] = math.atan2(bdx, bdz)
+            
+        # BARCO (escala) — X / Z
+        plus = (glfw.get_key(win, glfw.KEY_X) == glfw.PRESS)
+        minus = (glfw.get_key(win, glfw.KEY_Z) == glfw.PRESS)
+        if plus or minus:
+            d = (1 if plus else 0) - (1 if minus else 0)
+            new_s = float(scene.boat.scale[0]) + d * 0.5 * dt
+            new_s = max(0.1, min(0.2, new_s))
+            scene.boat.scale = np.array([new_s, new_s, new_s], dtype=np.float32)
 
         # POLVO (rotação) — R / T
         srot = (glfw.get_key(win, glfw.KEY_T) == glfw.PRESS) - (glfw.get_key(win, glfw.KEY_R) == glfw.PRESS)

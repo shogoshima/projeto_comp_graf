@@ -1,0 +1,40 @@
+# Materiais do bucket Ponyo
+
+newmtl bucket_ponyo
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+d 1.000
+illum 1
+map_Kd bucket_ponyo.png
+
+newmtl contour
+Ka 0.000 0.000 0.000
+Kd 0.050 0.050 0.050
+Ks 0.000 0.000 0.000
+d 1.000
+illum 1
+
+newmtl green_light
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+d 1.000
+illum 1
+map_Kd bucket_ponyo.png
+
+newmtl shadow
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+d 1.000
+illum 1
+map_Kd bucket_ponyo.png
+
+newmtl inside
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.000 0.000 0.000
+d 1.000
+illum 1
+map_Kd bucket_ponyo.png

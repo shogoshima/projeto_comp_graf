@@ -12,138 +12,17 @@ import math
 
 import numpy as np
 from OpenGL.GL import (
-    GL_ARRAY_BUFFER, GL_FALSE, GL_FLOAT, GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR,
-    GL_REPEAT, GL_RGBA, GL_STATIC_DRAW, GL_TEXTURE0, GL_TEXTURE_2D,
-    GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_WRAP_S,
-    GL_TEXTURE_WRAP_T, GL_TRIANGLES, GL_UNSIGNED_BYTE,
+    GL_ARRAY_BUFFER, GL_FALSE, GL_FLOAT, 
+    GL_STATIC_DRAW, GL_TEXTURE0, GL_TEXTURE_2D, GL_TRIANGLES,
     glActiveTexture, glBindBuffer, glBindTexture, glBindVertexArray,
     glBufferData, glDrawArrays, glEnableVertexAttribArray, glGenBuffers,
-    glGenerateMipmap, glGenTextures, glGenVertexArrays, glTexImage2D,
-    glTexParameteri, glVertexAttribPointer,
+    glGenVertexArrays, glVertexAttribPointer,
 )
 
 from src import transforms as T
 
 
 VERTEX_STRIDE = 8 * 4  # mantém o mesmo layout do Mesh (px,py,pz,u,v,nx,ny,nz)
-
-
-# --------------------------------------------------------------------------- #
-# Texturas procedurais
-# --------------------------------------------------------------------------- #
-def _to_gl_texture(rgba: np.ndarray) -> int:
-    """Sobe um array (H, W, 4) uint8 como textura 2D mip-mapped, repeat."""
-    h, w = rgba.shape[:2]
-    tex = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, tex)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                 rgba.tobytes())
-    glGenerateMipmap(GL_TEXTURE_2D)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glBindTexture(GL_TEXTURE_2D, 0)
-    return tex
-
-
-def make_grass_texture(size: int = 512, seed: int = 7) -> int:
-    """Grama/musgo: ruído verde-amarronzado tileável."""
-    rng = np.random.default_rng(seed)
-    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
-
-    base = np.zeros((size, size, 3), dtype=np.float32)
-    # cor base verde-musgo
-    base[..., 0] = 0.18
-    base[..., 1] = 0.34
-    base[..., 2] = 0.12
-
-    # ruído tileável: soma de cossenos com freqs inteiras
-    n = np.zeros((size, size), dtype=np.float32)
-    for f in (2, 5, 11, 23):
-        ph_x = rng.uniform(0, math.tau)
-        ph_y = rng.uniform(0, math.tau)
-        n += np.cos(2 * math.pi * f * xx / size + ph_x) * \
-             np.cos(2 * math.pi * f * yy / size + ph_y)
-    n = (n - n.min()) / (n.max() - n.min() + 1e-6)
-    n = n ** 1.4  # aumenta contraste das pintas
-
-    # tons mais escuros (musgo) onde n é alto
-    dark  = np.array([0.10, 0.20, 0.06], dtype=np.float32)
-    light = np.array([0.30, 0.55, 0.20], dtype=np.float32)
-    base = light[None, None, :] * (1 - n[..., None]) + dark[None, None, :] * n[..., None]
-
-    # poucas pedrinhas / talos amarelados
-    spots = rng.random((size, size)) > 0.997
-    base[spots] = np.array([0.55, 0.50, 0.20], dtype=np.float32)
-
-    rgba = np.zeros((size, size, 4), dtype=np.uint8)
-    rgba[..., :3] = np.clip(base * 255.0, 0, 255).astype(np.uint8)
-    rgba[..., 3] = 255
-    return _to_gl_texture(rgba)
-
-
-def make_wood_planks_texture(size: int = 512, seed: int = 13) -> int:
-    """Tábuas de madeira: faixas horizontais de tons quentes c/ veios."""
-    rng = np.random.default_rng(seed)
-    H, W = size, size
-    img = np.zeros((H, W, 3), dtype=np.float32)
-
-    n_planks = 6
-    plank_h = H // n_planks
-    plank_tones = [
-        (0.55, 0.34, 0.18),
-        (0.62, 0.40, 0.22),
-        (0.48, 0.30, 0.16),
-        (0.58, 0.36, 0.20),
-        (0.52, 0.32, 0.18),
-        (0.60, 0.38, 0.22),
-    ]
-    rng.shuffle(plank_tones)
-
-    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-    for i in range(n_planks):
-        y0 = i * plank_h
-        y1 = (i + 1) * plank_h
-        tone = np.array(plank_tones[i % len(plank_tones)], dtype=np.float32)
-        # veios horizontais: senoide com fase aleatória, modulando o tom
-        vein_phase = rng.uniform(0, math.tau)
-        vein = 0.07 * np.sin(2 * math.pi * 3 * xx[y0:y1] / W + vein_phase) + \
-               0.05 * np.sin(2 * math.pi * 8 * xx[y0:y1] / W + vein_phase * 0.7)
-        block = tone[None, None, :] + vein[..., None]
-        # ruído fino
-        block += rng.normal(scale=0.015, size=block.shape).astype(np.float32)
-        img[y0:y1] = block
-        # linha escura entre tábuas (juntas)
-        img[y0:y0 + 2] *= 0.4
-    img[-2:] *= 0.4
-
-    img = np.clip(img, 0.0, 1.0)
-    rgba = np.zeros((H, W, 4), dtype=np.uint8)
-    rgba[..., :3] = (img * 255.0).astype(np.uint8)
-    rgba[..., 3] = 255
-    return _to_gl_texture(rgba)
-
-
-def make_water_texture(size: int = 512, seed: int = 99) -> int:
-    """Água: cyan/azul com ondulações suaves."""
-    rng = np.random.default_rng(seed)
-    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
-    n = np.zeros((size, size), dtype=np.float32)
-    for f in (3, 7, 15):
-        ph = rng.uniform(0, math.tau)
-        n += np.sin(2 * math.pi * f * (xx + yy) / size + ph) * \
-             np.cos(2 * math.pi * f * (xx - yy) / size + ph * 0.5)
-    n = (n - n.min()) / (n.max() - n.min() + 1e-6)
-
-    dark  = np.array([0.05, 0.20, 0.45], dtype=np.float32)
-    light = np.array([0.30, 0.65, 0.85], dtype=np.float32)
-    img = dark[None, None, :] * (1 - n[..., None]) + light[None, None, :] * n[..., None]
-
-    rgba = np.zeros((size, size, 4), dtype=np.uint8)
-    rgba[..., :3] = np.clip(img * 255.0, 0, 255).astype(np.uint8)
-    rgba[..., 3] = 255
-    return _to_gl_texture(rgba)
 
 
 # --------------------------------------------------------------------------- #
@@ -219,22 +98,6 @@ def _disk(radius: float, segments: int = 64, y: float = 0.0,
     return np.asarray(verts, dtype=np.float32).reshape(-1, 8)
 
 
-def _quad(half_size: float, y: float = 0.0, uv_scale: float = 32.0) -> np.ndarray:
-    h = half_size
-    s = uv_scale
-    verts = np.array([
-        # tri 1
-        -h, y, -h,   0, 0,   0, 1, 0,
-         h, y, -h,   s, 0,   0, 1, 0,
-         h, y,  h,   s, s,   0, 1, 0,
-        # tri 2
-        -h, y, -h,   0, 0,   0, 1, 0,
-         h, y,  h,   s, s,   0, 1, 0,
-        -h, y,  h,   0, s,   0, 1, 0,
-    ], dtype=np.float32).reshape(-1, 8)
-    return verts
-
-
 # --------------------------------------------------------------------------- #
 # Wrapper de "piso" — VAO/VBO + draw, com transform opcional
 # --------------------------------------------------------------------------- #
@@ -280,23 +143,19 @@ class GrassFloorWithHole(_PlanarMesh):
     def __init__(self, world_half: float, hole_radius: float,
                  hole_center: tuple[float, float] = (0.0, 0.0),
                  segments: int = 64, uv_scale: float = 24.0):
+        from pathlib import Path
+        from src.texture import load_texture_2d
         verts = _quad_with_hole(world_half, hole_radius, hole_center,
                                 segments=segments, uv_scale=uv_scale)
-        tex = make_grass_texture()
-        super().__init__(verts, tex)
-
-
-class WoodFloorDisk(_PlanarMesh):
-    """Chão interno da cabana — disco circular de tábuas de madeira."""
-    def __init__(self, radius: float, segments: int = 64, uv_scale: float = 3.0):
-        verts = _disk(radius=radius, segments=segments, y=0.0, uv_scale=uv_scale)
-        tex = make_wood_planks_texture()
+        tex = load_texture_2d(str(Path(__file__).resolve().parent.parent / "assets" / "nature_textures" / "grass.png"))
         super().__init__(verts, tex)
 
 
 class WaterDisk(_PlanarMesh):
-    """Lago — disco azul com padrão de ondas."""
+    """Lago — disco com textura de água."""
     def __init__(self, radius: float, segments: int = 96, uv_scale: float = 2.0):
+        from pathlib import Path
+        from src.texture import load_texture_2d
         verts = _disk(radius=radius, segments=segments, y=0.0, uv_scale=uv_scale)
-        tex = make_water_texture()
+        tex = load_texture_2d(str(Path(__file__).resolve().parent.parent / "assets" / "nature_textures" / "water.png"))
         super().__init__(verts, tex)

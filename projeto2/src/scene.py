@@ -36,7 +36,7 @@ import numpy as np
 from OpenGL.GL import GL_CULL_FACE, glCullFace, glDisable, glEnable, GL_BACK
 
 from src.entity import Entity
-from src.floor import GrassFloorWithHole, WoodFloorDisk, WaterDisk
+from src.floor import GrassFloorWithHole, WaterDisk
 from src.mesh import Mesh
 from src.skybox import Skybox
 
@@ -80,19 +80,20 @@ class Scene:
             hole_radius=HUT_FOOTPRINT_RADIUS,
             hole_center=HUT_CENTER,
             segments=64,
-            uv_scale=24.0,
+            uv_scale=60.0,
         )
 
-        # Chão interno (madeira)
-        self.indoor_floor = WoodFloorDisk(
-            radius=HUT_FOOTPRINT_RADIUS - 0.05,  # leve recuo p/ caber dentro da parede
-            segments=64,
-            uv_scale=3.5,
+        # Chão interno (tapete)
+        CARPET_SCALE = 0.08
+        self.indoor_floor = Entity(
+            Mesh.from_obj(str(ASSETS / "carpet" / "carpet.obj")),
+            position=(HUT_CENTER[0] - 2.0, 0.1, HUT_CENTER[1] + 0.5),
+            rotation=(0.0, math.radians(90), 0.0),
+            scale=(CARPET_SCALE, CARPET_SCALE, CARPET_SCALE),
         )
-        self.indoor_floor.position = np.array([HUT_CENTER[0], 0.2, HUT_CENTER[1]], dtype=np.float32)
 
         # Lago
-        self.lake = WaterDisk(radius=LAKE_RADIUS, segments=96, uv_scale=2.5)
+        self.lake = WaterDisk(radius=LAKE_RADIUS, segments=96, uv_scale=6.0)
         self.lake.position = np.array([LAKE_CENTER[0], WATER_Y, LAKE_CENTER[1]],
                                       dtype=np.float32)
 
@@ -199,20 +200,29 @@ class Scene:
                                       rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
 
         # ---------------- Modelos INTERNOS ----------------
-        # Vara de pesca encostada na parede da cabana.
-        FISHING_ROD_SCALE = 2
-        self.fishingrod = Entity(
-            Mesh.from_obj(str(ASSETS / "fishingrod" / "fishingrod.obj")),
-            position=(HUT_CENTER[0] -2.0, 0.45, HUT_CENTER[1] -1.0),
-            rotation=(math.radians(-10), math.radians(30), math.radians(70)),
-            scale=(FISHING_ROD_SCALE, FISHING_ROD_SCALE, FISHING_ROD_SCALE),
+        # Mesa
+        TABLE_SCALE = 0.025
+        self.table = Entity(
+            Mesh.from_obj(str(ASSETS / "table" / "table.obj")),
+            position=(HUT_CENTER[0] + 1.0, 0.0, HUT_CENTER[1] + 3.5),
+            rotation=(0.0, math.radians(0), 0.0),
+            scale=(TABLE_SCALE, TABLE_SCALE, TABLE_SCALE),
+        )
+        
+        # Ramen ponyo
+        RAMEN_SCALE = 0.003
+        self.ramen = Entity(
+            Mesh.from_obj(str(ASSETS / "ramen" / "ramen.obj")),
+            position=(HUT_CENTER[0] + 1.0, 1.65, HUT_CENTER[1] + 3.5),
+            rotation=(0.0, math.radians(0), 0.0),
+            scale=(RAMEN_SCALE, RAMEN_SCALE, RAMEN_SCALE),
         )
 
         # Balde apoiado no chão de madeira, perto da parede oposta à vara.
-        BUCKET_SCALE = 2
+        BUCKET_SCALE = 0.2
         self.bucket = Entity(
-            Mesh.from_obj(str(ASSETS / "bucket" / "bucket.obj")),
-            position=(HUT_CENTER[0] +1.8, 0.21, HUT_CENTER[1] -1.2),
+            Mesh.from_obj(str(ASSETS / "bucket_ponyo" / "bucket_ponyo.obj")),
+            position=(HUT_CENTER[0] +1.8, -0.45, HUT_CENTER[1] -1.2),
             rotation=(0.0, math.radians(20), 0.0),
             scale=(BUCKET_SCALE, BUCKET_SCALE, BUCKET_SCALE),
         )
@@ -221,19 +231,19 @@ class Scene:
         FLASHLIGHT_SCALE = 0.02
         self.flashlight = Entity(
             Mesh.from_obj(str(ASSETS / "flashlight" / "flashlight.obj")),
-            position=(HUT_CENTER[0] -0.5, 0.3, HUT_CENTER[1] +2.0),  # y elevado p/ apoiar no piso (raio ~3cm)
-            rotation=(0.0, math.radians(35), 0.0),
+            position=(HUT_CENTER[0] -0.5, 0.3, HUT_CENTER[1] - 3.0),
+            rotation=(0.0, math.radians(120), 0.0),
             scale=(FLASHLIGHT_SCALE, FLASHLIGHT_SCALE, FLASHLIGHT_SCALE),
         )
 
-        self.indoor_extras: List[Entity] = [self.bucket, self.flashlight]
+        self.indoor_extras: List[Entity] = [self.bucket, self.flashlight, self.ramen]
 
         # ---------------- Listas para draw ----------------
         self.outdoor_entities: List[Entity] = [
             self.boat, self.octopus, self.seahorse, *self.outdoor_props,
         ]
         self.indoor_entities: List[Entity] = [
-            self.fishingrod, *self.indoor_extras,
+            self.table, *self.indoor_extras,
         ]
 
     # --------------------------------------------------------------- #
@@ -245,7 +255,7 @@ class Scene:
         self._time = t
         # bobbing do barco
         self.boat.position[1] = BOAT_Y + 0.025 * math.sin(t * 0.4)
-        self.boat.rotation[0] = math.radians(-90) + math.radians(2.0) * math.sin(t * 1.0)
+        self.boat.rotation[0] = math.radians(-90) + math.radians(3.0) * math.sin(t * 1.0)
 
     def draw(self, shader, wireframe: bool = False) -> None:
         # pisos
