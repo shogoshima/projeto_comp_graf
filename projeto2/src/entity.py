@@ -21,18 +21,27 @@ class Entity:
         position: tuple[float, float, float] = (0, 0, 0),
         rotation: tuple[float, float, float] = (0, 0, 0),  # radianos
         scale: tuple[float, float, float] = (1, 1, 1),
+        pivot: tuple[float, float, float] = (0, 0, 0),
         disable_culling: bool = False,
     ):
         self.mesh = mesh
         self.position = np.array(position, dtype=np.float32)
         self.rotation = np.array(rotation, dtype=np.float32)
         self.scale    = np.array(scale, dtype=np.float32)
+        self.pivot    = np.array(pivot, dtype=np.float32)
         self.disable_culling = disable_culling
 
     def model_matrix(self) -> np.ndarray:
-        return T.trs(tuple(self.position.tolist()),
+        # Compose: T(position) · T(pivot) · R · S · T(-pivot)
+        # This allows scaling and rotation around the pivot point
+        px, py, pz = tuple(self.pivot.tolist())
+        
+        m = T.translation(px, py, pz)
+        m = m @ T.trs(tuple(self.position.tolist()),
                      tuple(self.rotation.tolist()),
                      tuple(self.scale.tolist()))
+        m = m @ T.translation(-px, -py, -pz)
+        return m
 
     def draw(self, shader) -> None:
         if self.disable_culling:

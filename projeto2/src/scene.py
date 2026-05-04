@@ -57,7 +57,8 @@ HUT_CENTER  = (-14.0, 0.0)  # (x, z) — cabana centrada à esquerda do mundo
 LAKE_CENTER = ( 14.0, 0.0)  # (x, z) — lago centrado à direita do mundo
 LAKE_RADIUS = 18.0
 WATER_Y = 0.05               # ligeiramente acima do solo p/ evitar z-fighting
-BOAT_Y = WATER_Y + 0.55           # altura do barco (pode ser animada com a água)
+BOAT_Y = WATER_Y           # altura do barco (pode ser animada com a água)
+BOAT_PIVOT_Z = -5.0  # pivô do barco (para inclinar melhor) — 5m à frente do centro do modelo
 
 
 class Scene:
@@ -112,8 +113,9 @@ class Scene:
         self.boat = Entity(
             Mesh.from_obj(str(ASSETS / "ponyo_boat" / "ponyo_boat.obj")),
             position=(LAKE_CENTER[0] - 4.0, BOAT_Y, LAKE_CENTER[1]),
-            rotation=(math.radians(-90), math.radians(-90), 0.0),
+            rotation=(math.radians(-90), math.radians(0), math.radians(0)),
             scale=(BOAT_SCALE, BOAT_SCALE, BOAT_SCALE),
+            pivot=(0.0, 0.0, BOAT_PIVOT_Z),
         )
 
         # Polvo ao redor do lago, em pé (ligeiramente submerso). Rotação por teclado.
@@ -255,7 +257,7 @@ class Scene:
         self._time = t
         # bobbing do barco
         self.boat.position[1] = BOAT_Y + 0.025 * math.sin(t * 0.4)
-        self.boat.rotation[0] = math.radians(-90) + math.radians(3.0) * math.sin(t * 1.0)
+        self.boat.rotation[0] = math.radians(-90) + math.radians(2.0) * math.sin(t * 1.0)
 
     def draw(self, shader, wireframe: bool = False) -> None:
         # pisos

@@ -36,7 +36,7 @@ from OpenGL.GL import (
 from src import transforms as T
 from src.camera import FpsCamera
 from src.scene import (
-    Scene, SKY_HEIGHT, WORLD_HALF, LAKE_CENTER, LAKE_RADIUS, WATER_Y,
+    BOAT_PIVOT_Z, Scene, SKY_HEIGHT, WORLD_HALF, LAKE_CENTER, LAKE_RADIUS, WATER_Y,
 )
 from src.shader import Shader
 
@@ -117,6 +117,7 @@ def main() -> int:
 
     # parâmetros das transformações por teclado
     boat_speed = 4.0
+    boat_turn_speed = 6.0
     octopus_rot_speed = 1.6
     seahorse_scale_speed = 0.6
     seahorse_min, seahorse_max = 0.15, 1.5
@@ -142,6 +143,16 @@ def main() -> int:
         bdx = (glfw.get_key(win, glfw.KEY_RIGHT) == glfw.PRESS) - (glfw.get_key(win, glfw.KEY_LEFT) == glfw.PRESS)
         bdz = (glfw.get_key(win, glfw.KEY_DOWN)  == glfw.PRESS) - (glfw.get_key(win, glfw.KEY_UP)   == glfw.PRESS)
         if bdx or bdz:
+            desired_yaw = math.atan2(bdx, bdz)
+            current_yaw = float(scene.boat.rotation[1])
+            # smooth yaw to avoid pivot snaps when changing direction
+            delta = (desired_yaw - current_yaw + math.pi) % (2.0 * math.pi) - math.pi
+            yaw_step = boat_turn_speed * dt
+            if abs(delta) <= yaw_step:
+                new_yaw = desired_yaw
+            else:
+                new_yaw = current_yaw + math.copysign(yaw_step, delta)
+
             scene.boat.position[0] += bdx * boat_speed * dt
             scene.boat.position[2] += bdz * boat_speed * dt
             # mantém o barco DENTRO do círculo do lago (não sai pro chão)
@@ -153,7 +164,7 @@ def main() -> int:
                 scene.boat.position[0] = cx + dx * (max_r / r)
                 scene.boat.position[2] = cz + dz * (max_r / r)
             # vira a "proa" pra direção do movimento
-            scene.boat.rotation[1] = math.atan2(bdx, bdz)
+            scene.boat.rotation[1] = new_yaw
             
         # BARCO (escala) — X / Z
         plus = (glfw.get_key(win, glfw.KEY_X) == glfw.PRESS)
