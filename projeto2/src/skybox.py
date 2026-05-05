@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from OpenGL.GL import (
-    GL_ARRAY_BUFFER, GL_CULL_FACE, GL_DEPTH_TEST, GL_FALSE, GL_FLOAT,
+    GL_ARRAY_BUFFER, GL_CULL_FACE, GL_FALSE, GL_FLOAT,
     GL_LEQUAL, GL_LESS, GL_STATIC_DRAW, GL_TEXTURE0, GL_TEXTURE_CUBE_MAP,
     GL_TRIANGLES,
     glActiveTexture, glBindBuffer, glBindTexture, glBindVertexArray,

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 from OpenGL.GL import (
-    GL_COMPILE_STATUS, GL_FALSE, GL_FRAGMENT_SHADER, GL_LINK_STATUS, GL_TRUE,
+    GL_COMPILE_STATUS, GL_FRAGMENT_SHADER, GL_LINK_STATUS, GL_TRUE,
     GL_VERTEX_SHADER,
     glAttachShader, glCompileShader, glCreateProgram, glCreateShader,
     glDeleteShader, glGetProgramInfoLog, glGetProgramiv, glGetShaderInfoLog,

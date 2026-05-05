@@ -33,7 +33,6 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-from OpenGL.GL import GL_CULL_FACE, glCullFace, glDisable, glEnable, GL_BACK
 
 from src.entity import Entity
 from src.floor import GrassFloorWithHole, WaterDisk

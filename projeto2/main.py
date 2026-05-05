@@ -1,9 +1,8 @@
 """
 Computação Gráfica — Projeto 2
-Cena 3D: "Pescaria de Luxo" 
+Tema: Pescaria + Ponyo (filme do Studio Ghibli)
 
-Pipeline moderno do OpenGL: VAO/VBO + GLSL + matrizes em numpy.
-SEM iluminação (proibido pelo PDF).
+Alunos: Thales Sena de Queiroz e Shogo Shima
 
 Controles:
   Câmera (FPS):
@@ -36,7 +35,7 @@ from OpenGL.GL import (
 from src import transforms as T
 from src.camera import FpsCamera
 from src.scene import (
-    BOAT_PIVOT_Z, Scene, SKY_HEIGHT, WORLD_HALF, LAKE_CENTER, LAKE_RADIUS, WATER_Y,
+    BOAT_PIVOT_Z, Scene, SKY_HEIGHT, WORLD_HALF, LAKE_CENTER, LAKE_RADIUS,
 )
 from src.shader import Shader
 
