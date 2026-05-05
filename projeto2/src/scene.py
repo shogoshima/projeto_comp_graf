@@ -24,7 +24,7 @@ Convenção dos modelos (para cada exemplo):
 Transformações por teclado (regra 7):
 - Translação  → BARCO (setas ↑↓←→ dentro do lago)
 - Rotação     → POLVO (R / T)
-- Escala      → CAVALO-MARINHO (+ / -)
+- Escala      → BARCO (Z / X)
 """
 from __future__ import annotations
 
@@ -122,49 +122,6 @@ class JumpingFish:
                 self.progress = 0.0
 
 
-class SwimmingSeahorse:
-    """Cavalo-marinho que nada pelo lago com oscilação senoidal."""
-
-    def __init__(self, entity: Entity, lake_cx: float, lake_cz: float,
-                 lake_r: float, swim_speed: float = 2.0,
-                 bob_amp: float = 0.6, bob_freq: float = 0.9):
-        self.entity = entity
-        self.cx, self.cz, self.r = lake_cx, lake_cz, lake_r
-        self.speed = swim_speed
-        self.bob_amp = bob_amp
-        self.bob_freq = bob_freq
-
-        self.x = float(entity.position[0])
-        self.z = float(entity.position[2])
-        self.yaw = float(entity.rotation[1])
-        self.time = 0.0
-
-    def update(self, dt: float) -> None:
-        self.time += dt
-
-        self.x += math.cos(self.yaw) * self.speed * dt
-        self.z -= math.sin(self.yaw) * self.speed * dt
-
-        dx = self.x - self.cx
-        dz = self.z - self.cz
-        dist = math.sqrt(dx * dx + dz * dz)
-        margin = self.r - 3.0
-
-        if dist > margin:
-            target = math.atan2(self.z - self.cz, self.cx - self.x)
-            delta = (target - self.yaw + math.pi) % math.tau - math.pi
-            self.yaw += delta * min(1.0, 4.0 * dt)
-        else:
-            self.yaw += math.sin(self.time * 0.5) * 0.4 * dt
-
-        y = WATER_Y - 1.5 + self.bob_amp * math.sin(self.time * self.bob_freq * math.tau)
-
-        self.entity.position[0] = self.x
-        self.entity.position[1] = y
-        self.entity.position[2] = self.z
-        self.entity.rotation[1] = self.yaw
-
-
 class Scene:
     def __init__(self):
         # ---------------- Skybox ----------------
@@ -229,15 +186,6 @@ class Scene:
             position=(LAKE_CENTER[0] + 8.0, WATER_Y + 0.05, LAKE_CENTER[1] - 2.0),
             rotation=(0.0, 0.0, 0.0),
             scale=(OCTOPUS_SCALE, OCTOPUS_SCALE, OCTOPUS_SCALE),
-        )
-
-        # Cavalo-marinho perto da margem, escala por teclado.
-        SEAHORSE_SCALE = 0.4
-        self.seahorse = Entity(
-            Mesh.from_obj(str(ASSETS / "seahorse" / "seahorse.obj")),
-            position=(LAKE_CENTER[0] - 12.0, WATER_Y, LAKE_CENTER[1] + 4.0),
-            rotation=(0.0, math.radians(45), 0.0),
-            scale=(SEAHORSE_SCALE, SEAHORSE_SCALE, SEAHORSE_SCALE),
         )
 
         rng = np.random.default_rng(seed=2024)
@@ -344,11 +292,6 @@ class Scene:
 
         self.indoor_extras: List[Entity] = [self.bucket, self.flashlight, self.ramen]
 
-        # ---------------- Cavalo-marinho nadando ----------------
-        self.swimming_seahorse = SwimmingSeahorse(
-            self.seahorse, LAKE_CENTER[0], LAKE_CENTER[1], LAKE_RADIUS,
-        )
-
         # ---------------- Peixes pulando ----------------
         FISH_SCALE = 0.5
         fish_mesh = Mesh.from_obj(str(ASSETS / "fish" / "pez3.obj"))
@@ -371,7 +314,7 @@ class Scene:
 
         # ---------------- Listas para draw ----------------
         self.outdoor_entities: List[Entity] = [
-            self.boat, self.octopus, self.seahorse, *self.outdoor_props,
+            self.boat, self.octopus, *self.outdoor_props,
             *[jf.entity for jf in self.jumping_fish],
         ]
         self.indoor_entities: List[Entity] = [
@@ -388,8 +331,6 @@ class Scene:
         # bobbing do barco
         self.boat.position[1] = BOAT_Y + 0.025 * math.sin(t * 0.4)
         self.boat.rotation[0] = math.radians(-90) + math.radians(2.0) * math.sin(t * 1.0)
-        # cavalo-marinho
-        self.swimming_seahorse.update(dt)
         # peixes
         for jf in self.jumping_fish:
             jf.update(dt)

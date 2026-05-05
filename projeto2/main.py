@@ -14,7 +14,6 @@ Controles:
   Transformações (regra 7):
     Setas (↑↓←→)       — translação do BARCO no lago
     R / T              — rotação do POLVO
-    + / -              — escala do CAVALO-MARINHO
     Z / X              — escala do Barco
   Visualização:
     P                  — toggle wireframe
@@ -120,9 +119,6 @@ def main() -> int:
     boat_speed = 4.0
     boat_turn_speed = 6.0
     octopus_rot_speed = 1.6
-    seahorse_scale_speed = 0.6
-    seahorse_min, seahorse_max = 0.15, 1.5
-
     print("[init] OK. Entrando no loop.")
     last_t = glfw.get_time()
     while not glfw.window_should_close(win):
@@ -185,17 +181,6 @@ def main() -> int:
         srot = (glfw.get_key(win, glfw.KEY_T) == glfw.PRESS) - (glfw.get_key(win, glfw.KEY_R) == glfw.PRESS)
         if srot:
             scene.octopus.rotation[1] += srot * octopus_rot_speed * dt
-
-        # CAVALO-MARINHO (escala) — + / -
-        plus = (glfw.get_key(win, glfw.KEY_EQUAL) == glfw.PRESS or
-                glfw.get_key(win, glfw.KEY_KP_ADD) == glfw.PRESS)
-        minus = (glfw.get_key(win, glfw.KEY_MINUS) == glfw.PRESS or
-                 glfw.get_key(win, glfw.KEY_KP_SUBTRACT) == glfw.PRESS)
-        if plus or minus:
-            d = (1 if plus else 0) - (1 if minus else 0)
-            new_s = float(scene.seahorse.scale[0]) + d * seahorse_scale_speed * dt
-            new_s = max(seahorse_min, min(seahorse_max, new_s))
-            scene.seahorse.scale = np.array([new_s, new_s, new_s], dtype=np.float32)
 
         # WIREFRAME toggle (P)
         p_now = glfw.get_key(win, glfw.KEY_P) == glfw.PRESS
