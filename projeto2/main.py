@@ -2,7 +2,7 @@
 Computação Gráfica — Projeto 2
 Tema: Pescaria + Ponyo (filme do Studio Ghibli)
 
-Alunos: Thales Sena de Queiroz e Shogo Shima
+Alunos: Thales Sena de Queiroz (NUSP: 14608873), Shogo Shima (NUSP: 12675145)
 
 Controles:
   Câmera (FPS):

@@ -2,8 +2,8 @@
 
 ## Alunos
 
-- Thales Sena de Queiroz
-- Shogo Shima
+- Thales Sena de Queiroz (NUSP: 14608873)
+- Shogo Shima (NUSP: 12675145)
 
 ## Tema
 
