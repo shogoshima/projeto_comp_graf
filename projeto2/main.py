@@ -1,6 +1,6 @@
 """
 Computação Gráfica — Projeto 2
-Cena 3D: "Pescaria de Luxo" (lago mágico + cabana de pescador na floresta).
+Cena 3D: "Pescaria de Luxo" 
 
 Pipeline moderno do OpenGL: VAO/VBO + GLSL + matrizes em numpy.
 SEM iluminação (proibido pelo PDF).
@@ -15,6 +15,7 @@ Controles:
     Setas (↑↓←→)       — translação do BARCO no lago
     R / T              — rotação do POLVO
     + / -              — escala do CAVALO-MARINHO
+    Z / X              — escala do Barco
   Visualização:
     P                  — toggle wireframe
 """
@@ -171,8 +172,8 @@ def main() -> int:
         minus = (glfw.get_key(win, glfw.KEY_Z) == glfw.PRESS)
         if plus or minus:
             d = (1 if plus else 0) - (1 if minus else 0)
-            new_s = float(scene.boat.scale[0]) + d * 0.5 * dt
-            new_s = max(0.1, min(0.2, new_s))
+            new_s = float(scene.boat.scale[0]) + d * 0.8 * dt
+            new_s = max(0.05, min(0.5, new_s))
             scene.boat.scale = np.array([new_s, new_s, new_s], dtype=np.float32)
 
         # POLVO (rotação) — R / T

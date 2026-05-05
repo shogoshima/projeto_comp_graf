@@ -61,6 +61,110 @@ BOAT_Y = WATER_Y           # altura do barco (pode ser animada com a água)
 BOAT_PIVOT_Z = -5.0  # pivô do barco (para inclinar melhor) — 5m à frente do centro do modelo
 
 
+class JumpingFish:
+    """Peixe que pula periodicamente fora d'água em arco parabólico."""
+
+    def __init__(self, entity: Entity, lake_cx: float, lake_cz: float,
+                 lake_r: float, rng: np.random.Generator,
+                 jump_height: float = 3.0, jump_dist: float = 5.0,
+                 jump_dur: float = 1.0):
+        self.entity = entity
+        self.cx, self.cz, self.r = lake_cx, lake_cz, lake_r
+        self.rng = rng
+        self.jump_h = jump_height
+        self.jump_d = jump_dist
+        self.jump_dur = jump_dur
+
+        angle = float(rng.uniform(0, math.tau))
+        dist = float(rng.uniform(2, lake_r - 4))
+        self.x = lake_cx + dist * math.cos(angle)
+        self.z = lake_cz + dist * math.sin(angle)
+        self.yaw = float(rng.uniform(0, math.tau))
+
+        self.is_jumping = False
+        self.timer = float(rng.uniform(0.5, 3.0))
+        self.progress = 0.0
+        entity.position[1] = WATER_Y - 5.0
+
+    def update(self, dt: float) -> None:
+        if self.is_jumping:
+            self.progress += dt
+            t = min(self.progress / self.jump_dur, 1.0)
+
+            y = WATER_Y + self.jump_h * 4.0 * t * (1.0 - t)
+
+            speed = self.jump_d / self.jump_dur
+            self.x += math.cos(self.yaw) * speed * dt
+            self.z -= math.sin(self.yaw) * speed * dt
+
+            slope = 4.0 * self.jump_h * (1.0 - 2.0 * t) / self.jump_d
+            pitch = math.atan(slope)
+
+            self.entity.position[0] = self.x
+            self.entity.position[1] = y
+            self.entity.position[2] = self.z
+            self.entity.rotation[1] = self.yaw
+            self.entity.rotation[2] = pitch
+
+            if self.progress >= self.jump_dur:
+                self.is_jumping = False
+                self.timer = float(self.rng.uniform(1.5, 4.0))
+                self.entity.position[1] = WATER_Y - 5.0
+                self.yaw += float(self.rng.uniform(-0.8, 0.8))
+        else:
+            self.timer -= dt
+            if self.timer <= 0:
+                end_x = self.x + math.cos(self.yaw) * self.jump_d
+                end_z = self.z - math.sin(self.yaw) * self.jump_d
+                if (end_x - self.cx) ** 2 + (end_z - self.cz) ** 2 > (self.r - 3.0) ** 2:
+                    self.yaw += math.pi
+                self.is_jumping = True
+                self.progress = 0.0
+
+
+class SwimmingSeahorse:
+    """Cavalo-marinho que nada pelo lago com bobbing senoidal."""
+
+    def __init__(self, entity: Entity, lake_cx: float, lake_cz: float,
+                 lake_r: float, swim_speed: float = 2.0,
+                 bob_amp: float = 0.6, bob_freq: float = 0.9):
+        self.entity = entity
+        self.cx, self.cz, self.r = lake_cx, lake_cz, lake_r
+        self.speed = swim_speed
+        self.bob_amp = bob_amp
+        self.bob_freq = bob_freq
+
+        self.x = float(entity.position[0])
+        self.z = float(entity.position[2])
+        self.yaw = float(entity.rotation[1])
+        self.time = 0.0
+
+    def update(self, dt: float) -> None:
+        self.time += dt
+
+        self.x += math.cos(self.yaw) * self.speed * dt
+        self.z -= math.sin(self.yaw) * self.speed * dt
+
+        dx = self.x - self.cx
+        dz = self.z - self.cz
+        dist = math.sqrt(dx * dx + dz * dz)
+        margin = self.r - 3.0
+
+        if dist > margin:
+            target = math.atan2(self.z - self.cz, self.cx - self.x)
+            delta = (target - self.yaw + math.pi) % math.tau - math.pi
+            self.yaw += delta * min(1.0, 4.0 * dt)
+        else:
+            self.yaw += math.sin(self.time * 0.5) * 0.4 * dt
+
+        y = WATER_Y - 1.5 + self.bob_amp * math.sin(self.time * self.bob_freq * math.tau)
+
+        self.entity.position[0] = self.x
+        self.entity.position[1] = y
+        self.entity.position[2] = self.z
+        self.entity.rotation[1] = self.yaw
+
+
 class Scene:
     def __init__(self):
         # ---------------- Skybox ----------------
@@ -240,9 +344,35 @@ class Scene:
 
         self.indoor_extras: List[Entity] = [self.bucket, self.flashlight, self.ramen]
 
+        # ---------------- Cavalo-marinho nadando ----------------
+        self.swimming_seahorse = SwimmingSeahorse(
+            self.seahorse, LAKE_CENTER[0], LAKE_CENTER[1], LAKE_RADIUS,
+        )
+
+        # ---------------- Peixes pulando ----------------
+        FISH_SCALE = 0.5
+        fish_mesh = Mesh.from_obj(str(ASSETS / "fish" / "pez3.obj"))
+        fish_params = [
+            dict(jump_height=2.5, jump_dist=4.0, jump_dur=0.9),
+            dict(jump_height=3.5, jump_dist=6.0, jump_dur=1.1),
+            dict(jump_height=3.0, jump_dist=5.0, jump_dur=1.0),
+        ]
+        self.jumping_fish: List[JumpingFish] = []
+        for params in fish_params:
+            ent = Entity(
+                fish_mesh,
+                scale=(FISH_SCALE, FISH_SCALE, FISH_SCALE),
+                disable_culling=True,
+            )
+            self.jumping_fish.append(
+                JumpingFish(ent, LAKE_CENTER[0], LAKE_CENTER[1],
+                            LAKE_RADIUS, rng, **params)
+            )
+
         # ---------------- Listas para draw ----------------
         self.outdoor_entities: List[Entity] = [
             self.boat, self.octopus, self.seahorse, *self.outdoor_props,
+            *[jf.entity for jf in self.jumping_fish],
         ]
         self.indoor_entities: List[Entity] = [
             self.table, *self.indoor_extras,
@@ -252,12 +382,17 @@ class Scene:
     # Update / draw
     # --------------------------------------------------------------- #
     def update(self, dt: float) -> None:
-        """Animações sutis: barco oscila com a água."""
+        """Animações sutis: barco oscila com a água, peixes pulam."""
         t = (self._time if hasattr(self, "_time") else 0.0) + dt
         self._time = t
         # bobbing do barco
         self.boat.position[1] = BOAT_Y + 0.025 * math.sin(t * 0.4)
         self.boat.rotation[0] = math.radians(-90) + math.radians(2.0) * math.sin(t * 1.0)
+        # cavalo-marinho
+        self.swimming_seahorse.update(dt)
+        # peixes
+        for jf in self.jumping_fish:
+            jf.update(dt)
 
     def draw(self, shader, wireframe: bool = False) -> None:
         # pisos
