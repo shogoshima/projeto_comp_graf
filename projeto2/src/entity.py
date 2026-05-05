@@ -32,8 +32,7 @@ class Entity:
         self.disable_culling = disable_culling
 
     def model_matrix(self) -> np.ndarray:
-        # Compose: T(position) · T(pivot) · R · S · T(-pivot)
-        # This allows scaling and rotation around the pivot point
+        # T(pivô) · TRS(pos, rot, escala) · T(-pivô)
         px, py, pz = tuple(self.pivot.tolist())
         
         m = T.translation(px, py, pz)

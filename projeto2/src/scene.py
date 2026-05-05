@@ -123,7 +123,7 @@ class JumpingFish:
 
 
 class SwimmingSeahorse:
-    """Cavalo-marinho que nada pelo lago com bobbing senoidal."""
+    """Cavalo-marinho que nada pelo lago com oscilação senoidal."""
 
     def __init__(self, entity: Entity, lake_cx: float, lake_cz: float,
                  lake_r: float, swim_speed: float = 2.0,

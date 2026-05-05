@@ -146,7 +146,7 @@ def main() -> int:
         if bdx or bdz:
             desired_yaw = math.atan2(bdx, bdz)
             current_yaw = float(scene.boat.rotation[1])
-            # smooth yaw to avoid pivot snaps when changing direction
+            # suaviza o yaw pra evitar saltos bruscos ao mudar de direção
             delta = (desired_yaw - current_yaw + math.pi) % (2.0 * math.pi) - math.pi
             yaw_step = boat_turn_speed * dt
             if abs(delta) <= yaw_step:
@@ -156,14 +156,19 @@ def main() -> int:
 
             scene.boat.position[0] += bdx * boat_speed * dt
             scene.boat.position[2] += bdz * boat_speed * dt
-            # mantém o barco DENTRO do círculo do lago (não sai pro chão)
+            # clamp usando o centro visual (pivô desloca -5 em Z no mundo)
             cx, cz = LAKE_CENTER
-            dx, dz = scene.boat.position[0] - cx, scene.boat.position[2] - cz
+            vis_x = scene.boat.position[0]
+            vis_z = scene.boat.position[2] + BOAT_PIVOT_Z
+            dx, dz = vis_x - cx, vis_z - cz
             r = math.sqrt(dx * dx + dz * dz)
-            max_r = LAKE_RADIUS - 1.5
+            margin = 1.5 + float(scene.boat.scale[0]) * 15.0
+            max_r = max(LAKE_RADIUS - margin, 1.0)
             if r > max_r:
-                scene.boat.position[0] = cx + dx * (max_r / r)
-                scene.boat.position[2] = cz + dz * (max_r / r)
+                dx *= max_r / r
+                dz *= max_r / r
+                scene.boat.position[0] = cx + dx
+                scene.boat.position[2] = cz + dz - BOAT_PIVOT_Z
             # vira a "proa" pra direção do movimento
             scene.boat.rotation[1] = new_yaw
             
