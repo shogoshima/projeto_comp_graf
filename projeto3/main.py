@@ -252,10 +252,11 @@ def main() -> int:
             scene.change_diffuse(adjust_speed)
         if glfw.get_key(win, glfw.KEY_U) == glfw.PRESS:
             scene.change_diffuse(-adjust_speed)
+        specular_speed = 1.5 * dt
         if glfw.get_key(win, glfw.KEY_L) == glfw.PRESS:
-            scene.change_specular(adjust_speed)
+            scene.change_specular(specular_speed)
         if glfw.get_key(win, glfw.KEY_O) == glfw.PRESS:
-            scene.change_specular(-adjust_speed)
+            scene.change_specular(-specular_speed)
 
         # ---------------- UPDATE ----------------
         scene.update(dt)

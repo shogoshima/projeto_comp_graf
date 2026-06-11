@@ -22,7 +22,7 @@ uniform float u_diffuse_gain;
 uniform float u_specular_gain;
 
 uniform int u_sun_enabled;
-uniform vec3 u_sun_direction;
+uniform vec3 u_sun_pos;
 uniform vec3 u_sun_color;
 uniform float u_sun_intensity;
 
@@ -45,24 +45,6 @@ uniform float u_flashlight_inner_cutoff;
 uniform float u_flashlight_outer_cutoff;
 
 out vec4 frag_color;
-
-vec3 apply_directional_light(
-    vec3 base,
-    vec3 normal,
-    vec3 view_dir,
-    vec3 direction,
-    vec3 color,
-    float intensity
-) {
-    vec3 light_dir = normalize(-direction);
-    float diff = max(dot(normal, light_dir), 0.0);
-    vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), u_shininess);
-
-    vec3 diffuse = base * u_material_diffuse * u_diffuse_gain * diff;
-    vec3 specular = vec3(u_material_specular * u_specular_gain * spec);
-    return (diffuse + specular) * color * intensity;
-}
 
 vec3 apply_point_light(
     vec3 base,
@@ -132,9 +114,9 @@ void main() {
 
     if (u_environment == 0) {
         if (u_sun_enabled == 1) {
-            color += apply_directional_light(
+            color += apply_point_light(
                 base, normal, view_dir,
-                u_sun_direction, u_sun_color, u_sun_intensity
+                u_sun_pos, u_sun_color, u_sun_intensity
             );
         }
         if (u_boat_light_enabled == 1) {

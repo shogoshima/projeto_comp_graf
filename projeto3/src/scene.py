@@ -554,9 +554,9 @@ class Scene:
         shader.set_float("u_specular_gain", self.specular_gain)
 
         shader.set_int("u_sun_enabled", 1 if self.sun_enabled else 0)
-        shader.set_vec3("u_sun_direction", -0.35, -1.0, -0.28)
+        shader.set_vec3("u_sun_pos", -120.0, 220.0, -90.0)
         shader.set_vec3("u_sun_color", 1.0, 0.94, 0.82)
-        shader.set_float("u_sun_intensity", 1.1)
+        shader.set_float("u_sun_intensity", 2400.0)
 
         bx, by, bz = self.boat_light_position()
         shader.set_int("u_boat_light_enabled", 1 if self.boat_light_enabled else 0)
