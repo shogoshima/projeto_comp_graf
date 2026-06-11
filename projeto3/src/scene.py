@@ -188,20 +188,6 @@ class Scene:
             uv_scale=60.0,
         )
 
-        # Chão interno (tapete)
-        CARPET_SCALE = 0.08
-        self.indoor_floor = Entity(
-            Mesh.from_obj(str(ASSETS / "carpet" / "carpet.obj")),
-            position=(HUT_CENTER[0] - 2.0, 0.1, HUT_CENTER[1] + 0.5),
-            rotation=(0.0, math.radians(90), 0.0),
-            scale=(CARPET_SCALE, CARPET_SCALE, CARPET_SCALE),
-            environment=1,
-            base_color=(1.0, 0.92, 0.86),
-            diffuse=0.78,
-            specular=0.18,
-            shininess=24.0,
-        )
-
         # Lago
         self.lake = WaterDisk(radius=LAKE_RADIUS, segments=96, uv_scale=6.0)
         self.lake.position = np.array([LAKE_CENTER[0], WATER_Y, LAKE_CENTER[1]],
@@ -568,7 +554,7 @@ class Scene:
         shader.set_int("u_lightbulb_enabled", 1 if self.lightbulb_enabled else 0)
         shader.set_vec3("u_lightbulb_pos", lx, ly, lz)
         shader.set_vec3("u_lightbulb_color", 1.0, 0.82, 0.45)
-        shader.set_float("u_lightbulb_intensity", 12.0)
+        shader.set_float("u_lightbulb_intensity", 6.0)
 
         fx, fy, fz = self.flashlight_position()
         fdx, fdy, fdz = self.flashlight_direction()
@@ -576,14 +562,13 @@ class Scene:
         shader.set_vec3("u_flashlight_pos", fx, fy, fz)
         shader.set_vec3("u_flashlight_dir", fdx, fdy, fdz)
         shader.set_vec3("u_flashlight_color", 0.55, 0.76, 1.0)
-        shader.set_float("u_flashlight_intensity", 35.0)
+        shader.set_float("u_flashlight_intensity", 12.0)
         shader.set_float("u_flashlight_inner_cutoff", math.cos(math.radians(22.0)))
         shader.set_float("u_flashlight_outer_cutoff", math.cos(math.radians(42.0)))
 
     def draw(self, shader, wireframe: bool = False) -> None:
         # pisos
         self.outdoor_floor.draw(shader)
-        self.indoor_floor.draw(shader)
         self.lake.draw(shader)
 
         # cabana (delimitador, com cull off)
