@@ -148,6 +148,7 @@ class _PlanarMesh:
         shader.set_float("u_material_diffuse", self.diffuse)
         shader.set_float("u_material_specular", self.specular)
         shader.set_float("u_shininess", self.shininess)
+        shader.set_float("u_normal_sign", 1.0)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         shader.set_int("u_tex", 0)
@@ -181,5 +182,5 @@ class WaterDisk(_PlanarMesh):
         tex = load_texture_2d(str(Path(__file__).resolve().parent.parent / "assets" / "nature_textures" / "water.png"))
         super().__init__(
             verts, tex, environment=0, base_color=(0.75, 0.9, 1.0),
-            diffuse=0.68, specular=0.28, shininess=36.0,
+            diffuse=0.75, specular=0.0, shininess=1.0,
         )

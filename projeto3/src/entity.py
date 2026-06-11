@@ -28,6 +28,7 @@ class Entity:
         diffuse: float = 0.8,
         specular: float = 0.25,
         shininess: float = 32.0,
+        normal_sign: float = 1.0,
     ):
         self.mesh = mesh
         self.position = np.array(position, dtype=np.float32)
@@ -40,6 +41,7 @@ class Entity:
         self.diffuse = float(diffuse)
         self.specular = float(specular)
         self.shininess = float(shininess)
+        self.normal_sign = float(normal_sign)
 
     def model_matrix(self) -> np.ndarray:
         # T(pivô) · TRS(pos, rot, escala) · T(-pivô)
@@ -60,6 +62,7 @@ class Entity:
         shader.set_float("u_material_diffuse", self.diffuse)
         shader.set_float("u_material_specular", self.specular)
         shader.set_float("u_shininess", self.shininess)
+        shader.set_float("u_normal_sign", self.normal_sign)
         shader.set_mat4("u_model", self.model_matrix())
         self.mesh.draw(shader)
         if self.disable_culling:

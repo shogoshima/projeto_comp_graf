@@ -438,9 +438,10 @@ class Scene:
                 disable_culling=True,
                 environment=0,
                 base_color=(0.95, 0.98, 1.0),
-                diffuse=0.7,
-                specular=0.6,
-                shininess=72.0,
+                diffuse=0.5,
+                specular=0.10,
+                shininess=48.0,
+                normal_sign=-1.0,
             )
             self.jumping_fish.append(
                 JumpingFish(ent, LAKE_CENTER[0], LAKE_CENTER[1],

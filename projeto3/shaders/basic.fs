@@ -12,6 +12,7 @@ uniform vec3 u_base_color;
 uniform float u_material_diffuse;
 uniform float u_material_specular;
 uniform float u_shininess;
+uniform float u_normal_sign;
 
 uniform vec3 u_view_pos;
 
@@ -121,7 +122,7 @@ void main() {
     }
 
     vec3 base = texture(u_tex, v_uv).rgb * u_base_color;
-    vec3 normal = normalize(v_normal);
+    vec3 normal = normalize(v_normal) * u_normal_sign;
     vec3 view_dir = normalize(u_view_pos - v_world_pos);
 
     vec3 color = vec3(0.0);
