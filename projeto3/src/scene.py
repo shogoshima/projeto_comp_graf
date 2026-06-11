@@ -328,7 +328,7 @@ class Scene:
         BUCKET_SCALE = 0.2
         self.bucket = Entity(
             Mesh.from_obj(str(ASSETS / "bucket_ponyo" / "bucket_ponyo.obj")),
-            position=(HUT_CENTER[0] +1.8, -0.45, HUT_CENTER[1] -1.2),
+            position=(HUT_CENTER[0] - 1, -0.45, HUT_CENTER[1] + 3.5),
             rotation=(0.0, math.radians(20), 0.0),
             scale=(BUCKET_SCALE, BUCKET_SCALE, BUCKET_SCALE),
         )
@@ -337,12 +337,23 @@ class Scene:
         FLASHLIGHT_SCALE = 0.02
         self.flashlight = Entity(
             Mesh.from_obj(str(ASSETS / "flashlight" / "flashlight.obj")),
-            position=(HUT_CENTER[0] -0.5, 0.3, HUT_CENTER[1] - 3.0),
-            rotation=(0.0, math.radians(120), 0.0),
+            position=(HUT_CENTER[0] - 1, 0.5, HUT_CENTER[1] + 3.5),
+            rotation=(0.0, math.radians(120), - math.radians(75)),
             scale=(FLASHLIGHT_SCALE, FLASHLIGHT_SCALE, FLASHLIGHT_SCALE),
         )
 
-        self.indoor_extras: List[Entity] = [self.bucket, self.flashlight, self.ramen]
+        # Lâmpada pendurada no centro da cabana.
+        LIGHTBULB_SCALE = 0.08
+        self.lightbulb = Entity(
+            Mesh.from_obj(str(ASSETS / "lightbulb" / "lightbulb.obj")),
+            position=(HUT_CENTER[0] + 0.56, -9, HUT_CENTER[1] - 6.2),
+            rotation=(0.0, math.radians(0), 0.0),
+            scale=(LIGHTBULB_SCALE, LIGHTBULB_SCALE, LIGHTBULB_SCALE),
+        )
+
+        self.indoor_extras: List[Entity] = [
+            self.bucket, self.flashlight, self.ramen, self.lightbulb,
+        ]
 
         # ---------------- Cavalo-marinho nadando ----------------
         self.swimming_seahorse = SwimmingSeahorse(
