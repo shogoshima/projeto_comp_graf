@@ -561,7 +561,7 @@ class Scene:
         shader.set_int("u_boat_light_enabled", 1 if self.boat_light_enabled else 0)
         shader.set_vec3("u_boat_light_pos", bx, by, bz)
         shader.set_vec3("u_boat_light_color", 1.0, 0.64, 0.28)
-        shader.set_float("u_boat_light_intensity", 4.0)
+        shader.set_float("u_boat_light_intensity", 10.0)
 
         lx, ly, lz = self.lightbulb_position()
         shader.set_int("u_lightbulb_enabled", 1 if self.lightbulb_enabled else 0)
