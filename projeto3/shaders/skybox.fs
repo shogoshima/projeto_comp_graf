@@ -3,9 +3,11 @@
 in vec3 v_dir;
 
 uniform samplerCube u_cubemap;
+uniform float u_brightness;
 
 out vec4 frag_color;
 
 void main() {
-    frag_color = texture(u_cubemap, v_dir);
+    vec4 texel = texture(u_cubemap, v_dir);
+    frag_color = vec4(texel.rgb * u_brightness, texel.a);
 }

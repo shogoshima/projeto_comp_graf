@@ -195,6 +195,11 @@ class Scene:
             position=(HUT_CENTER[0] - 2.0, 0.1, HUT_CENTER[1] + 0.5),
             rotation=(0.0, math.radians(90), 0.0),
             scale=(CARPET_SCALE, CARPET_SCALE, CARPET_SCALE),
+            environment=1,
+            base_color=(1.0, 0.92, 0.86),
+            diffuse=0.78,
+            specular=0.18,
+            shininess=24.0,
         )
 
         # Lago
@@ -209,6 +214,11 @@ class Scene:
             position=(HUT_CENTER[0] + 5.6 * HUT_SCALE, 0.0, HUT_CENTER[1] + 0.19 * HUT_SCALE),
             scale=(HUT_SCALE, HUT_SCALE, HUT_SCALE),
             disable_culling=True,
+            environment=1,
+            base_color=(1.0, 0.95, 0.86),
+            diffuse=0.82,
+            specular=0.12,
+            shininess=18.0,
         )
 
         # ---------------- Modelos EXTERNOS ----------------
@@ -220,6 +230,11 @@ class Scene:
             rotation=(math.radians(-90), math.radians(0), math.radians(0)),
             scale=(BOAT_SCALE, BOAT_SCALE, BOAT_SCALE),
             pivot=(0.0, 0.0, BOAT_PIVOT_Z),
+            environment=0,
+            base_color=(1.0, 0.93, 0.85),
+            diffuse=0.78,
+            specular=0.35,
+            shininess=38.0,
         )
 
         # Polvo ao redor do lago, em pé (ligeiramente submerso). Rotação por teclado.
@@ -229,6 +244,11 @@ class Scene:
             position=(LAKE_CENTER[0] + 8.0, WATER_Y + 0.05, LAKE_CENTER[1] - 2.0),
             rotation=(0.0, 0.0, 0.0),
             scale=(OCTOPUS_SCALE, OCTOPUS_SCALE, OCTOPUS_SCALE),
+            environment=0,
+            base_color=(0.98, 0.82, 0.9),
+            diffuse=0.72,
+            specular=0.45,
+            shininess=42.0,
         )
 
         # Cavalo-marinho perto da margem, escala por teclado.
@@ -238,6 +258,11 @@ class Scene:
             position=(LAKE_CENTER[0] - 12.0, WATER_Y, LAKE_CENTER[1] + 4.0),
             rotation=(0.0, math.radians(45), 0.0),
             scale=(SEAHORSE_SCALE, SEAHORSE_SCALE, SEAHORSE_SCALE),
+            environment=0,
+            base_color=(0.9, 0.98, 1.0),
+            diffuse=0.74,
+            specular=0.55,
+            shininess=58.0,
         )
 
         rng = np.random.default_rng(seed=2024)
@@ -282,8 +307,12 @@ class Scene:
             x, z = pos
             scale = float(rng.uniform(0.8, 1.0))
             yaw = float(rng.uniform(0, math.tau))
-            self.outdoor_props.append(Entity(spruce_meshes[i % 2], position=(x, 0.0, z),
-                                      rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
+            self.outdoor_props.append(Entity(
+                spruce_meshes[i % 2], position=(x, 0.0, z),
+                rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale),
+                environment=0, base_color=(0.88, 1.0, 0.86),
+                diffuse=0.86, specular=0.06, shininess=10.0,
+            ))
 
         for i in range(200):
             pos = random_outdoor_pos()
@@ -292,8 +321,12 @@ class Scene:
             x, z = pos
             scale = float(rng.uniform(0.8, 1.0))
             yaw = float(rng.uniform(0, math.tau))
-            self.outdoor_props.append(Entity(bush_set_meshes[i % 2], position=(x, 0.0, z),
-                                      rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
+            self.outdoor_props.append(Entity(
+                bush_set_meshes[i % 2], position=(x, 0.0, z),
+                rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale),
+                environment=0, base_color=(0.82, 1.0, 0.78),
+                diffuse=0.84, specular=0.05, shininess=8.0,
+            ))
 
         for i in range(100):
             pos = random_outdoor_pos()
@@ -302,8 +335,12 @@ class Scene:
             x, z = pos
             scale = float(rng.uniform(1.0, 2.0))
             yaw = float(rng.uniform(0, math.tau))
-            self.outdoor_props.append(Entity(stone_meshes[i % 2], position=(x, 0.0, z),
-                                      rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale)))
+            self.outdoor_props.append(Entity(
+                stone_meshes[i % 2], position=(x, 0.0, z),
+                rotation=(0.0, yaw, 0.0), scale=(scale, scale, scale),
+                environment=0, base_color=(0.92, 0.92, 0.9),
+                diffuse=0.7, specular=0.22, shininess=22.0,
+            ))
 
         # ---------------- Modelos INTERNOS ----------------
         # Mesa
@@ -313,6 +350,11 @@ class Scene:
             position=(HUT_CENTER[0] + 1.0, 0.0, HUT_CENTER[1] + 3.5),
             rotation=(0.0, math.radians(0), 0.0),
             scale=(TABLE_SCALE, TABLE_SCALE, TABLE_SCALE),
+            environment=1,
+            base_color=(1.0, 0.88, 0.76),
+            diffuse=0.74,
+            specular=0.34,
+            shininess=40.0,
         )
         
         # Ramen ponyo
@@ -322,6 +364,11 @@ class Scene:
             position=(HUT_CENTER[0] + 1.0, 1.65, HUT_CENTER[1] + 3.5),
             rotation=(0.0, math.radians(0), 0.0),
             scale=(RAMEN_SCALE, RAMEN_SCALE, RAMEN_SCALE),
+            environment=1,
+            base_color=(1.0, 0.96, 0.9),
+            diffuse=0.72,
+            specular=0.48,
+            shininess=56.0,
         )
 
         # Balde apoiado no chão de madeira, perto da parede oposta à vara.
@@ -331,6 +378,11 @@ class Scene:
             position=(HUT_CENTER[0] - 1, -0.45, HUT_CENTER[1] + 3.5),
             rotation=(0.0, math.radians(20), 0.0),
             scale=(BUCKET_SCALE, BUCKET_SCALE, BUCKET_SCALE),
+            environment=1,
+            base_color=(0.96, 0.96, 1.0),
+            diffuse=0.68,
+            specular=0.55,
+            shininess=64.0,
         )
 
         # Lanterna deitada no chão
@@ -340,6 +392,11 @@ class Scene:
             position=(HUT_CENTER[0] - 1, 0.5, HUT_CENTER[1] + 3.5),
             rotation=(0.0, math.radians(120), - math.radians(75)),
             scale=(FLASHLIGHT_SCALE, FLASHLIGHT_SCALE, FLASHLIGHT_SCALE),
+            environment=1,
+            base_color=(0.92, 0.94, 1.0),
+            diffuse=0.62,
+            specular=0.85,
+            shininess=96.0,
         )
 
         # Lâmpada pendurada no centro da cabana.
@@ -349,6 +406,11 @@ class Scene:
             position=(HUT_CENTER[0] + 0.56, -9, HUT_CENTER[1] - 6.2),
             rotation=(0.0, math.radians(0), 0.0),
             scale=(LIGHTBULB_SCALE, LIGHTBULB_SCALE, LIGHTBULB_SCALE),
+            environment=1,
+            base_color=(1.0, 0.94, 0.74),
+            diffuse=0.78,
+            specular=0.35,
+            shininess=44.0,
         )
 
         self.indoor_extras: List[Entity] = [
@@ -374,6 +436,11 @@ class Scene:
                 fish_mesh,
                 scale=(FISH_SCALE, FISH_SCALE, FISH_SCALE),
                 disable_culling=True,
+                environment=0,
+                base_color=(0.95, 0.98, 1.0),
+                diffuse=0.7,
+                specular=0.6,
+                shininess=72.0,
             )
             self.jumping_fish.append(
                 JumpingFish(ent, LAKE_CENTER[0], LAKE_CENTER[1],
@@ -388,6 +455,19 @@ class Scene:
         self.indoor_entities: List[Entity] = [
             self.table, *self.indoor_extras,
         ]
+
+        # ---------------- Iluminação ----------------
+        self.ambient_enabled = True
+        self.sun_enabled = True
+        self.boat_light_enabled = True
+        self.lightbulb_enabled = True
+        self.flashlight_enabled = True
+        self.ambient_strength = 0.22
+        self.day_ambient_strength = 0.22
+        self.night_ambient_strength = 0.06
+        self.diffuse_gain = 1.0
+        self.specular_gain = 1.0
+        self.night_mode = False
 
     # --------------------------------------------------------------- #
     # Update / draw
@@ -404,6 +484,100 @@ class Scene:
         # peixes
         for jf in self.jumping_fish:
             jf.update(dt)
+
+    @staticmethod
+    def _entity_local_point(entity: Entity, point: tuple[float, float, float]) -> tuple[float, float, float]:
+        p = np.array([point[0], point[1], point[2], 1.0], dtype=np.float32)
+        world = entity.model_matrix() @ p
+        return (float(world[0]), float(world[1]), float(world[2]))
+
+    @staticmethod
+    def _entity_local_direction(entity: Entity, direction: tuple[float, float, float]) -> tuple[float, float, float]:
+        p0 = entity.model_matrix() @ np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+        p1 = entity.model_matrix() @ np.array([direction[0], direction[1], direction[2], 1.0], dtype=np.float32)
+        d = p1[:3] - p0[:3]
+        d /= np.linalg.norm(d) + 1e-12
+        return (float(d[0]), float(d[1]), float(d[2]))
+
+    def boat_light_position(self) -> tuple[float, float, float]:
+        """Posição aproximada da vela dentro do barco.
+
+        Usa coordenadas locais do OBJ e a mesma matriz de modelo do barco para
+        acompanhar yaw, pitch, escala, bobbing e o pivô deslocado do casco.
+        """
+        return self._entity_local_point(self.boat, (0.0, 0.0, 4.0))
+
+    def lightbulb_position(self) -> tuple[float, float, float]:
+        return self._entity_local_point(self.lightbulb, (-7.14, 199.6, 85.5))
+
+    def flashlight_position(self) -> tuple[float, float, float]:
+        return self._entity_local_point(self.flashlight, (-16.34, 0.0, 0.0))
+
+    def flashlight_direction(self) -> tuple[float, float, float]:
+        return self._entity_local_direction(self.flashlight, (-1.0, 0.0, 0.0))
+
+    def skybox_brightness(self) -> float:
+        return 0.1 if self.night_mode else 1.0
+
+    def toggle_night_mode(self) -> None:
+        self.night_mode = not self.night_mode
+        if self.night_mode:
+            self.sun_enabled = False
+            self.ambient_strength = self.night_ambient_strength
+        else:
+            self.sun_enabled = True
+            self.ambient_strength = self.day_ambient_strength
+
+    @staticmethod
+    def _clamp(value: float, lo: float, hi: float) -> float:
+        return max(lo, min(hi, value))
+
+    def change_ambient(self, delta: float) -> None:
+        self.ambient_strength = self._clamp(self.ambient_strength + delta, 0.0, 0.6)
+        if not self.night_mode:
+            self.day_ambient_strength = self.ambient_strength
+
+    def change_diffuse(self, delta: float) -> None:
+        self.diffuse_gain = self._clamp(self.diffuse_gain + delta, 0.0, 2.0)
+
+    def change_specular(self, delta: float) -> None:
+        self.specular_gain = self._clamp(self.specular_gain + delta, 0.0, 2.0)
+
+    def apply_lighting_uniforms(self, shader, camera_position) -> None:
+        cam = np.asarray(camera_position, dtype=np.float32)
+        shader.set_vec3("u_view_pos", float(cam[0]), float(cam[1]), float(cam[2]))
+
+        shader.set_int("u_ambient_enabled", 1 if self.ambient_enabled else 0)
+        shader.set_float("u_ambient_strength", self.ambient_strength)
+        shader.set_float("u_diffuse_gain", self.diffuse_gain)
+        shader.set_float("u_specular_gain", self.specular_gain)
+
+        shader.set_int("u_sun_enabled", 1 if self.sun_enabled else 0)
+        shader.set_vec3("u_sun_direction", -0.35, -1.0, -0.28)
+        shader.set_vec3("u_sun_color", 1.0, 0.94, 0.82)
+        shader.set_float("u_sun_intensity", 1.1)
+
+        bx, by, bz = self.boat_light_position()
+        shader.set_int("u_boat_light_enabled", 1 if self.boat_light_enabled else 0)
+        shader.set_vec3("u_boat_light_pos", bx, by, bz)
+        shader.set_vec3("u_boat_light_color", 1.0, 0.64, 0.28)
+        shader.set_float("u_boat_light_intensity", 4.0)
+
+        lx, ly, lz = self.lightbulb_position()
+        shader.set_int("u_lightbulb_enabled", 1 if self.lightbulb_enabled else 0)
+        shader.set_vec3("u_lightbulb_pos", lx, ly, lz)
+        shader.set_vec3("u_lightbulb_color", 1.0, 0.82, 0.45)
+        shader.set_float("u_lightbulb_intensity", 12.0)
+
+        fx, fy, fz = self.flashlight_position()
+        fdx, fdy, fdz = self.flashlight_direction()
+        shader.set_int("u_flashlight_enabled", 1 if self.flashlight_enabled else 0)
+        shader.set_vec3("u_flashlight_pos", fx, fy, fz)
+        shader.set_vec3("u_flashlight_dir", fdx, fdy, fdz)
+        shader.set_vec3("u_flashlight_color", 0.55, 0.76, 1.0)
+        shader.set_float("u_flashlight_intensity", 35.0)
+        shader.set_float("u_flashlight_inner_cutoff", math.cos(math.radians(22.0)))
+        shader.set_float("u_flashlight_outer_cutoff", math.cos(math.radians(42.0)))
 
     def draw(self, shader, wireframe: bool = False) -> None:
         # pisos

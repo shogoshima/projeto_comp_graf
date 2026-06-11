@@ -110,7 +110,6 @@ class Mesh:
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, r.texture_id)
             shader.set_int("u_tex", 0)
-            shader.set_vec3("u_kd", *r.kd)
             glDrawArrays(GL_TRIANGLES, r.start, r.count)
         glBindVertexArray(0)
 

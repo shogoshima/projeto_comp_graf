@@ -58,12 +58,19 @@ class Skybox:
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * 4, ctypes.c_void_p(0))
         glBindVertexArray(0)
 
-    def draw(self, shader, view_no_translation: np.ndarray, proj: np.ndarray) -> None:
+    def draw(
+        self,
+        shader,
+        view_no_translation: np.ndarray,
+        proj: np.ndarray,
+        brightness: float = 1.0,
+    ) -> None:
         glDisable(GL_CULL_FACE)
         glDepthFunc(GL_LEQUAL)
         shader.use()
         shader.set_mat4("u_view", view_no_translation)
         shader.set_mat4("u_proj", proj)
+        shader.set_float("u_brightness", brightness)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_CUBE_MAP, self.cubemap)
         shader.set_int("u_cubemap", 0)

@@ -17,6 +17,14 @@ Controles:
     Z / X              — escala do Barco
   Visualização:
     P                  — toggle wireframe
+  Iluminação:
+    N                  — alterna modo noite (cena mais escura)
+    1 / 2              — liga/desliga sol / vela do barco
+    3 / 4              — liga/desliga lâmpada / lanterna
+    5                  — liga/desliga luz ambiente
+    J / K              — diminui/aumenta luz ambiente
+    U / I              — diminui/aumenta reflexão difusa
+    O / L              — diminui/aumenta reflexão especular
 """
 from __future__ import annotations
 
@@ -54,6 +62,14 @@ class InputState:
         self.last_y = HEIGHT / 2
         self.wireframe = False
         self.p_was_down = False
+        self.key_was_down: dict[int, bool] = {}
+
+
+def pressed_once(win, inp: InputState, key: int) -> bool:
+    now = glfw.get_key(win, key) == glfw.PRESS
+    was_down = inp.key_was_down.get(key, False)
+    inp.key_was_down[key] = now
+    return now and not was_down
 
 
 def make_window():
@@ -202,12 +218,44 @@ def main() -> int:
             scene.seahorse.scale = np.array([new_s, new_s, new_s], dtype=np.float32)
 
         # WIREFRAME toggle (P)
-        p_now = glfw.get_key(win, glfw.KEY_P) == glfw.PRESS
-        if p_now and not inp.p_was_down:
+        if pressed_once(win, inp, glfw.KEY_P):
             inp.wireframe = not inp.wireframe
             print(f"[wireframe] {'ON' if inp.wireframe else 'OFF'}")
-        inp.p_was_down = p_now
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE if inp.wireframe else GL_FILL)
+
+        # ---------------- LUZES ----------------
+        if pressed_once(win, inp, glfw.KEY_N):
+            scene.toggle_night_mode()
+            print(f"[luz] modo noite {'ON' if scene.night_mode else 'OFF'}")
+        if pressed_once(win, inp, glfw.KEY_1):
+            scene.sun_enabled = not scene.sun_enabled
+            print(f"[luz] sol {'ON' if scene.sun_enabled else 'OFF'}")
+        if pressed_once(win, inp, glfw.KEY_2):
+            scene.boat_light_enabled = not scene.boat_light_enabled
+            print(f"[luz] vela do barco {'ON' if scene.boat_light_enabled else 'OFF'}")
+        if pressed_once(win, inp, glfw.KEY_3):
+            scene.lightbulb_enabled = not scene.lightbulb_enabled
+            print(f"[luz] lâmpada {'ON' if scene.lightbulb_enabled else 'OFF'}")
+        if pressed_once(win, inp, glfw.KEY_4):
+            scene.flashlight_enabled = not scene.flashlight_enabled
+            print(f"[luz] lanterna {'ON' if scene.flashlight_enabled else 'OFF'}")
+        if pressed_once(win, inp, glfw.KEY_5):
+            scene.ambient_enabled = not scene.ambient_enabled
+            print(f"[luz] ambiente {'ON' if scene.ambient_enabled else 'OFF'}")
+
+        adjust_speed = 0.6 * dt
+        if glfw.get_key(win, glfw.KEY_K) == glfw.PRESS:
+            scene.change_ambient(adjust_speed)
+        if glfw.get_key(win, glfw.KEY_J) == glfw.PRESS:
+            scene.change_ambient(-adjust_speed)
+        if glfw.get_key(win, glfw.KEY_I) == glfw.PRESS:
+            scene.change_diffuse(adjust_speed)
+        if glfw.get_key(win, glfw.KEY_U) == glfw.PRESS:
+            scene.change_diffuse(-adjust_speed)
+        if glfw.get_key(win, glfw.KEY_L) == glfw.PRESS:
+            scene.change_specular(adjust_speed)
+        if glfw.get_key(win, glfw.KEY_O) == glfw.PRESS:
+            scene.change_specular(-adjust_speed)
 
         # ---------------- UPDATE ----------------
         scene.update(dt)
@@ -222,13 +270,14 @@ def main() -> int:
         # 1) Skybox primeiro (com view sem translação)
         view_no_t = view.copy()
         view_no_t[0, 3] = view_no_t[1, 3] = view_no_t[2, 3] = 0.0
-        scene.skybox.draw(sky_shader, view_no_t, proj)
+        scene.skybox.draw(sky_shader, view_no_t, proj, brightness=scene.skybox_brightness())
 
         # 2) Resto da cena (com basic shader)
         basic.use()
         basic.set_mat4("u_proj", proj)
         basic.set_mat4("u_view", view)
         basic.set_int("u_wireframe", 1 if inp.wireframe else 0)
+        scene.apply_lighting_uniforms(basic, cam.position)
         scene.draw(basic, wireframe=inp.wireframe)
 
         glfw.swap_buffers(win)

@@ -102,12 +102,26 @@ def _disk(radius: float, segments: int = 64, y: float = 0.0,
 # Wrapper de "piso" — VAO/VBO + draw, com transform opcional
 # --------------------------------------------------------------------------- #
 class _PlanarMesh:
-    def __init__(self, vertices: np.ndarray, texture_id: int):
+    def __init__(
+        self,
+        vertices: np.ndarray,
+        texture_id: int,
+        environment: int = 0,
+        base_color: tuple[float, float, float] = (1, 1, 1),
+        diffuse: float = 0.8,
+        specular: float = 0.15,
+        shininess: float = 16.0,
+    ):
         self.count = vertices.shape[0]
         self.texture_id = texture_id
         self.position = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         self.rotation = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         self.scale    = np.array([1.0, 1.0, 1.0], dtype=np.float32)
+        self.environment = environment
+        self.base_color = np.array(base_color, dtype=np.float32)
+        self.diffuse = float(diffuse)
+        self.specular = float(specular)
+        self.shininess = float(shininess)
 
         self.vao = glGenVertexArrays(1)
         self.vbo = glGenBuffers(1)
@@ -129,7 +143,11 @@ class _PlanarMesh:
 
     def draw(self, shader) -> None:
         shader.set_mat4("u_model", self.model_matrix())
-        shader.set_vec3("u_kd", 1.0, 1.0, 1.0)
+        shader.set_int("u_environment", self.environment)
+        shader.set_vec3("u_base_color", *self.base_color.tolist())
+        shader.set_float("u_material_diffuse", self.diffuse)
+        shader.set_float("u_material_specular", self.specular)
+        shader.set_float("u_shininess", self.shininess)
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
         shader.set_int("u_tex", 0)
@@ -148,7 +166,10 @@ class GrassFloorWithHole(_PlanarMesh):
         verts = _quad_with_hole(world_half, hole_radius, hole_center,
                                 segments=segments, uv_scale=uv_scale)
         tex = load_texture_2d(str(Path(__file__).resolve().parent.parent / "assets" / "nature_textures" / "grass.png"))
-        super().__init__(verts, tex)
+        super().__init__(
+            verts, tex, environment=0, base_color=(0.9, 1.0, 0.9),
+            diffuse=0.85, specular=0.08, shininess=12.0,
+        )
 
 
 class WaterDisk(_PlanarMesh):
@@ -158,4 +179,7 @@ class WaterDisk(_PlanarMesh):
         from src.texture import load_texture_2d
         verts = _disk(radius=radius, segments=segments, y=0.0, uv_scale=uv_scale)
         tex = load_texture_2d(str(Path(__file__).resolve().parent.parent / "assets" / "nature_textures" / "water.png"))
-        super().__init__(verts, tex)
+        super().__init__(
+            verts, tex, environment=0, base_color=(0.75, 0.9, 1.0),
+            diffuse=0.68, specular=0.28, shininess=36.0,
+        )
